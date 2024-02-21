@@ -1,8 +1,10 @@
 package com.bc208.blog.utils;
 
+import com.bc208.blog.service.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 /**
@@ -10,6 +12,9 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
  */
 @Slf4j
 public class UserRemindTask extends QuartzJobBean {
+
+    @Autowired
+    private MailService mailService;
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {

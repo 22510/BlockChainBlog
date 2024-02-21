@@ -14,6 +14,7 @@ import com.bc208.blog.service.CaptchaService;
 import com.bc208.blog.service.MailService;
 import com.bc208.blog.service.UserService;
 import com.bc208.blog.utils.PasswordEncoder;
+import com.bc208.blog.utils.UserHolder;
 import com.bc208.blog.utils.UserOpenidHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +25,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
+import java.awt.*;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.bc208.blog.utils.RedisConstants.LOGIN_USER_KEY;
-import static com.bc208.blog.utils.RedisConstants.REGISTER_CODE_KEY;
+import static com.bc208.blog.utils.RedisConstants.*;
 
 /**
  * @author QingheLi
@@ -74,20 +76,14 @@ public class UsersServiceImpl implements UserService {
         if (!PasswordEncoder.matches(user.getUserPassword(), loginDto.getPassword())){
             return Result.fail("密码错误");
         }
-
         String token = UUID.randomUUID().toString(true);
-
         Map<String, String> userMap = new HashMap<>(4);
-
         userMap.put("id", String.valueOf(user.getUserId()));
         userMap.put("name", user.getUserName());
         userMap.put("email", user.getUserEmail());
         userMap.put("role", user.getUserRole().toString());
-
         stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY + token, userMap);
-
         stringRedisTemplate.expire(LOGIN_USER_KEY + token, 30, TimeUnit.MINUTES);
-
         return Result.success(token);
     }
 
@@ -236,6 +232,7 @@ public class UsersServiceImpl implements UserService {
     @Autowired
     private RestTemplate restTemplate;
 
+
     @Override
     public Result getQRCode() {
         String getAccessTokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+appid+"&secret="+secret;
@@ -246,7 +243,7 @@ public class UsersServiceImpl implements UserService {
         log.warn("accessToken:"+accessToken);
         String getQRCodeUrl0 = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token="+accessToken;
         log.warn("url"+getQRCodeUrl0);
-        String getQRCodeUrl = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={accessToken}";
+        // String getQRCodeUrl = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={accessToken}";
 
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -260,21 +257,62 @@ public class UsersServiceImpl implements UserService {
 
         // ResponseEntity<byte[]> responseEntity = restTemplate.exchange(getQRCodeUrl, HttpMethod.POST, requestEntity, byte[].class, urlVariables);
         ResponseEntity<byte[]> responseEntity = restTemplate.exchange(getQRCodeUrl0, HttpMethod.POST, requestEntity, byte[].class);
-        log.warn("image:"+ Arrays.toString(responseEntity.getBody()));
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             byte[] imageBytes = responseEntity.getBody();
             // 保存图片到文件
-            try (FileOutputStream fos = new FileOutputStream("image.jpg")) {
+            try (FileOutputStream fos = new FileOutputStream("QRCode.jpg")) {
                 assert imageBytes != null;
                 fos.write(imageBytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            log.info("图片下载成功并保存到文件");
+            log.info("小程序码下载成功并保存到文件");
         } else {
-            log.info("图片下载失败，状态码：" + responseEntity.getStatusCode());
+            log.warn("小程序码下载失败，状态码：" + responseEntity.getStatusCode());
         }
         return Result.success();
+    }
+
+
+    // @Autowired
+    // @Qualifier("byteRedisTemplate")
+    // private RedisTemplate<String, byte[]> byteRedisTemplate;
+
+    @Override
+    public Result userSign() {
+        Long userId = UserHolder.getUser().getUserId();
+        LocalDateTime now = LocalDateTime.now();
+        String yymm = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        log.warn("yymm:"+yymm);
+        String key = SIGN_USER_KEY+userId+yymm;
+        log.warn("key:"+key);
+        int dayOfMonth = now.getDayOfMonth();
+        if(Boolean.TRUE.equals(stringRedisTemplate.opsForValue().getBit(key, dayOfMonth-1))){
+            return Result.fail("今日已登录");
+        }
+        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth -1, true);
+        stringRedisTemplate.expire(key, 30, TimeUnit.DAYS);
+        return Result.success();
+        // TODO: 用Quartz定时将内容持久化. 这里遇到问题, 怎么把token取出来?
+    }
+
+    @Override
+    public Result treasureDig(double latitude, double longitude) {
+        if (!isPointInPolygon(latitude, longitude)){
+            return Result.fail("您不在校园范围内.");
+        }
+        Map<Object, Object> treasurePoints = stringRedisTemplate.opsForHash().entries(TREASURE_DIG);
+        double treasureLat = 0;
+        double treasureLon = 0;
+        for (int i = 0; i < 50; i++) {
+            String[] point = ((String) treasurePoints.get("p" + i)).split(",");
+            treasureLon = Double.parseDouble(point[0]);
+            treasureLat = Double.parseDouble(point[1]);
+            if(calculateDistance(latitude, longitude, treasureLat, treasureLon)){
+                return Result.success();
+            }
+        }
+        return Result.success("挖宝失败");
     }
 
     @Override
@@ -289,4 +327,64 @@ public class UsersServiceImpl implements UserService {
         mailService.sendMail(mailService.createMail(userEmail, "密码更新", newPassword));
         return Result.success();
     }
+
+    private static boolean isPointInPolygon(double lat, double lon) {
+        double[] polygonLat = {34.131791, 34.12135875, 34.11531941, 34.12619334};
+        double[] polygonLon = {108.8303095, 108.82381377, 108.83698984, 108.84364958};
+        Polygon polygon = new Polygon();
+        for (int i = 0; i < polygonLat.length; i++) {
+            polygon.addPoint((int) (polygonLon[i] * 1E6), (int) (polygonLat[i] * 1E6));
+        }
+        return polygon.contains((int) (lon * 1E6), (int) (lat * 1E6));
+    }
+
+    // // 使用 Haversine 公式计算两个点之间的距离
+    // private static boolean calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    //     double R = 6371000;
+    //     // 地球半径，单位为米
+    //     double dLat = Math.toRadians(lat2 - lat1);
+    //     double dLon = Math.toRadians(lon2 - lon1);
+    //
+    //     double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    //             Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+    //                     Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    //
+    //     double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    //     return R * c < 10;
+    // }
+
+    /**
+     * @describe 计算两点位置的距离，返回两点的距离，单位：公里或千米 (误差小于0.2米)
+     *
+     * @param lat1 第一点纬度
+     * @param lng1 第一点经度
+     * @param lat2 第二点纬度
+     * @param lng2 第二点经度
+     * @return 返回两点的距离，单位：公里或千米
+     */
+    public static boolean calculateDistance(double lat1, double lng1, double lat2, double lng2) {
+        //地球半径(单位米)
+        final double EARTH_RADIUS_METER = 6378137;
+        double radLat1 = Rad(lat1);
+        double radLng1 = Rad(lng1);
+        double radLat2 = Rad(lat2);
+        double radLng2 = Rad(lng2);
+        double a = radLat1 - radLat2;
+        double b = radLng1 - radLng2;
+        double result = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(a / 2), 2) + Math.cos(radLat1) * Math.cos(radLat2) * Math.pow(Math.sin(b / 2), 2))) * EARTH_RADIUS_METER;
+        return result < 5;
+    }
+
+    /**
+     * @describe 经纬度转化成弧度
+     *
+     * @param d 经纬度
+     * @return 弧度
+     */
+    private static double Rad(double d) {
+        return d * Math.PI / 180d;
+    }
+
 }
+
+

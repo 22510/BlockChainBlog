@@ -1,12 +1,25 @@
 spring:
   profiles:
-    active: dev
+#    active: dev
+    active: prod
   jackson:
     time-zone: GMT+8
 
 server:
   port: 8088
+  ssl:
+    key-store: classpath:www.qingheli.tech.jks
+    key-store-password: phifbs4s
+    keyStoreType: JKS
+
+wx:
+  mp:
+    appid: wx52477be3c70b0c40
+    secret: 27ff6e63d068608f2e0c3bd9a786d442
+    token: 22419090793fjll
+    aesKey: HwjsjfnogrMROu2gqBO3bcvSObgqguecJWhxNjgxyJ1
 
 mybatis:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+

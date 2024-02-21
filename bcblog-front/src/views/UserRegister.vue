@@ -35,7 +35,7 @@
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="密码:" prop="password">
-                <el-input v-model="ruleForm.password" />
+                <el-input type="password" v-model="ruleForm.password" />
             </el-form-item>
             <el-form-item label="验证码:" prop="captcha">
                 <el-input v-model="ruleForm.captcha">

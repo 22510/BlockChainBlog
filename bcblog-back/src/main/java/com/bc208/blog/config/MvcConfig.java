@@ -32,7 +32,11 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/bc208/wxLink",
                         "/bc208/captcha",
                         "/bc208/register",
-                        "/bc208/wxQRCode"
+                        "/bc208/wxQRCode",
+                        "/admin/login",
+                        "/admin/register",
+                        "/swagger**/**","/webjars/**","/v3/**","/doc.html",
+                        "/wxapi/checkToken"
                 ).order(1);
         registry.addInterceptor(new AuthorityInterceptor())
                 .excludePathPatterns("/**"

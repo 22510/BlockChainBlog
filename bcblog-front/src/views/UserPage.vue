@@ -11,26 +11,26 @@
                         " class="BCName">
                     <router-link to="/" class="toIndex">BlockChain Studio 208</router-link>
                 </div>
-                <div style="float: left; margin-left: 6vw" id="box">
+                <div style="float: left; margin-left: 7vw" id="box">
                     <router-link to="/blogShow">首页</router-link>    
                 </div>
-                <div style="float: left; margin-left: 6vw" id="box">
+                <div style="float: left; margin-left: 7vw" id="box">
                     <router-link to="/taskShow">待办</router-link>
                 </div>
-                <div style="float: left; margin-left: 6vw" id="box">
+                <div style="float: left; margin-left: 7vw" id="box">
                     <router-link to="/ideaShow">想法</router-link>
                 </div>
-                <div style="float: left; margin-left: 6vw" id="box">
+                <div style="float: left; margin-left: 7vw" id="box">
                     <router-link to="/matchShow">比赛</router-link>
                 </div>
-                <div style="float: left; margin-left: 6vw" id="box">
+                <div style="float: left; margin-left: 7vw" id="box">
                     <router-link to="/resourceShow">资料</router-link>
                 </div>
-                <div style="float: left; margin-left: 6vw" id="box">
+                <div style="float: left; margin-left: 7vw" id="box">
                     <router-link to="/resourceShow">这里"搜索框"</router-link>
                 </div>
-                <div style="float: left; margin-left: 6vw" id="box">
-                    <router-link to="/resourceShow">这里"创作中心"</router-link>
+                <div style="float: left; margin-left: 7vw" id="box">
+                    <router-link to="/resourceShow">写文章</router-link>
                 </div>
                 <div style="float: right; margin: 3vh; ">
                     <el-dropdown>
@@ -40,6 +40,7 @@
                     <template #dropdown>
                     <el-dropdown-menu>    
                         <el-dropdown-item><router-link to="/login">登录</router-link></el-dropdown-item>
+                        <el-dropdown-item><router-link to="/contentManage">内容管理</router-link></el-dropdown-item>
                         <el-dropdown-item>修改密码</el-dropdown-item>
                         <el-dropdown-item>账号退出</el-dropdown-item>
                     </el-dropdown-menu>

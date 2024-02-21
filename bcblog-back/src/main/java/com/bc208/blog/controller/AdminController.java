@@ -5,6 +5,8 @@ import com.bc208.blog.common.dto.LoginDTO;
 import com.bc208.blog.common.dto.Result;
 import com.bc208.blog.pojo.AdminRegisterDTO;
 import com.bc208.blog.service.impl.AdminServiceImpl;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,11 +17,13 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/admin")
+@Api(tags = "管理员接口")
 public class AdminController {
 
     @Autowired
     AdminServiceImpl adminService;
 
+    @ApiOperation("管理员注册")
     @PostMapping("/register")
     @ResponseBody
     public Result adminRegister(@RequestBody AdminRegisterDTO adminRegisterDto){

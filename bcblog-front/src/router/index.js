@@ -24,7 +24,42 @@ const routes = [
         name: 'register',
         component: () => import("../views/UserRegister.vue")
     },
-
+    {
+        path: '/contentManage',
+        name: 'contentManage',
+        component: () => import("../views/ContentManage.vue"),
+        redirect: "/personalStatistics",
+        meta: {
+            requiresAuth: true
+        },
+        children: [
+            {
+                path: '/personalStatistics',
+                name: 'personalStatistics',
+                component: () => import("../views/PersonalStatistics.vue")
+            },
+            {
+                path: '/personalArticle',
+                name: 'personalArticle',
+                component: () => import("../views/PersonalArticle.vue")
+            },
+            {
+                path: '/personalBrowseRecord',
+                name: 'personalBrowseRecord',
+                component: () => import("../views/PersonalBrowseRecord.vue")
+            },            
+            {
+                path: '/personalCollect',
+                name: 'personalCollect',
+                component: () => import("../views/PersonalCollect.vue")
+            },            
+            {
+                path: '/followVFans',
+                name: 'followVFans',
+                component: () => import("../views/FollowVFans.vue")
+            },
+        ],  
+    },
     {
         path: '/userPage',
         name: 'userPage',
@@ -54,7 +89,7 @@ const routes = [
                 path: '/resourceShow',
                 name: 'resourceShow',
                 component: () => import("../views/ResourceShow.vue")
-            },
+            },            
         ],      
     },
 

@@ -62,7 +62,7 @@ public class TaskServiceImpl implements TaskService {
             taskData.put("beginTime", taskDTO.getBeginTime().toString());
             taskData.put("importance", taskDTO.getImportance());
             taskData.put("taskDesc", taskDTO.getTaskDesc());
-            quartzService.addJob(UserRemindTask.class, taskDTO.getTaskName(), UserHolder.getUser().getUserId().toString(), taskData,cronExpression);
+            quartzService.addJob(UserRemindTask.class, taskDTO.getTaskName(), UserHolder.getUser().getUserId().toString(), taskData, cronExpression);
         }
 
         if (tasksMapper.addTask(userTask) != 1){

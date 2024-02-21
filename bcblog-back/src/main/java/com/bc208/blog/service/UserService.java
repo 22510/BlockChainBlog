@@ -60,4 +60,7 @@ public interface UserService {
 
     Result getQRCode();
 
+    Result userSign();
+
+    Result treasureDig(double latitude, double longitude);
 }

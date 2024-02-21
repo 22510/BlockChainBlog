@@ -65,16 +65,24 @@ public class UserController {
 
     @GetMapping("wxQRCode")
     public Result getWxQRCode(){
-        // TODO:没办法, 得将小程序"上线"才能真正的使用, 否则无法调用那个HTTP链接来获取小程序码
         return usersServiceImpl.getQRCode();
     }
 
     @GetMapping("/hello")
     @ResponseBody
     public Result hello(){
+        System.out.println("test");
         return Result.success("hello bc208");
     }
 
+    @GetMapping("/sign")
+    public Result userSign(){
+        return usersServiceImpl.userSign();
+    }
 
+    @GetMapping("/treasure")
+    public Result userTreasureDig(@RequestParam("lat") double latitude, @RequestParam("lon") double longitude){
+        return usersServiceImpl.treasureDig(latitude, longitude);
+    }
 
 }

@@ -1,13 +1,10 @@
 <template>
     <div class="task">
+        <div class="task-massage" style="border: 2px solid #ccc; padding: 1vh; margin: 1vh 0vh; border-radius: 10px;">
+            <el-button type="primary" @click="refreshList()">刷新任务清单</el-button>
+        </div>
         <div class="task-insert" style="border: 2px solid #ccc; padding: 1vh; margin: 1vh 0vh; border-radius: 10px;">
-            <el-form 
-                ref="ruleFormRef" 
-                :model="ruleForm" 
-                :rules="rules" 
-                label-width="6vw"
-                class="applicationForm"
-            >
+            <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-width="6vw" class="applicationForm">
                 <el-form-item label="任务名字" prop="name">
                     <el-input v-model="ruleForm.name" />
                 </el-form-item>
@@ -67,14 +64,19 @@
                 </el-form-item>
             </el-form>
         </div>
-        <el-card class="box-card" shadow="hover" v-for="item in 10" :key="item">
-            <template #header>
-                <div class="card-header">
-                    <span>任务名字</span>
-                    <el-button class="button" text>查看详情</el-button>
-                </div>
-            </template>
-            <div v-for="o in 4" :key="o" class="text item">{{ 'List item ' + o }}</div>
+        <el-card class="box-card" shadow="hover" v-for="task in taskList" :key="task">
+            <el-descriptions :data="task">
+                    <el-descriptions-item label="任务名">{{task.taskName}}</el-descriptions-item>
+                    <el-descriptions-item label="任务开始时间">{{task.beginTime}}</el-descriptions-item>
+                    <el-descriptions-item label="任务结束时间">{{task.endTime}}</el-descriptions-item>
+                    <el-descriptions-item label="重要程度">
+                        <el-tag size="small">{{task.importance}}</el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="任务描述">{{task.Desc}}</el-descriptions-item>
+                </el-descriptions>
+                <el-button type="primary" class="button" text>任务完成</el-button>
+                <el-button type="primary" class="button" text>任务修改</el-button>
+                <el-button type="primary" class="button" text>任务删除</el-button>
         </el-card>
     </div>
 </template>
@@ -83,6 +85,28 @@
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import axios from 'axios';
+
+const refreshList = (userName) => {
+    axios.get("application/loadDetail", {
+        params: {
+            userName: userName
+        },
+        headers: {
+            token: localStorage.getItem("token"),
+        },
+    })
+        .then((response) => {
+            if (response.data.success == true) {
+                applicationDetail.value = response.data.data
+            } else {
+                alert("获取面试人信息失败");
+            }
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
 
 interface RuleForm {
     name: string
@@ -176,6 +200,8 @@ const resetForm = (formEl: FormInstance | undefined) => {
     formEl.resetFields()
 }
 
+const taskList = 3;
+
 </script>
 
 <style scoped>
@@ -208,5 +234,4 @@ const resetForm = (formEl: FormInstance | undefined) => {
 .form-import-remind :deep(.el-form-item__content) {
     flex-wrap: nowrap;
 }
-
 </style>
